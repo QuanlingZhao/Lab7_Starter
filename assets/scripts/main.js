@@ -1,5 +1,8 @@
 // main.js
 
+
+
+
 // CONSTANTS
 const RECIPE_URLS = [
   'https://introweb.tech/assets/json/1_50-thanksgiving-side-dishes.json',
@@ -10,8 +13,16 @@ const RECIPE_URLS = [
   'https://introweb.tech/assets/json/6_one-pot-thanksgiving-dinner.json',
 ];
 
+
+
+
 // Run the init() function when the page has loaded
 window.addEventListener('DOMContentLoaded', init);
+
+
+
+
+
 
 // Starts the program, all function calls trace back here
 async function init() {
@@ -27,6 +38,31 @@ async function init() {
   // Add each recipe to the <main> element
   addRecipesToDocument(recipes);
 }
+
+
+
+
+
+function sw_handle() {
+  //B3
+  try {
+    navigator.serviceWorker.register('./sw.js');
+    //B4
+    console.log("SW loaded.");
+    //alert("success");
+  } catch(error) {
+    //B5
+    console.log("SW fail");
+    console.error(error);
+    //alert("unsuccess")
+  }
+}
+
+
+
+
+
+
 
 /**
  * Detects if there's a service worker, then loads it and begins the process
@@ -45,6 +81,15 @@ function initializeServiceWorker() {
   // We first must register our ServiceWorker here before any of the code in
   // sw.js is executed.
   // B1. TODO - Check if 'serviceWorker' is supported in the current browser
+
+  if ("serviceWorker" in navigator) {
+    //B2
+    window.addEventListener('load', sw_handle);
+    //alert("SW triggered")
+  } else {
+    return;
+  }
+
   // B2. TODO - Listen for the 'load' event on the window object.
   // Steps B3-B6 will be *inside* the event listener's function created in B2
   // B3. TODO - Register './sw.js' as a service worker (The MDN article
@@ -55,6 +100,13 @@ function initializeServiceWorker() {
   //            log that it has failed.
   // STEPS B6 ONWARDS WILL BE IN /sw.js
 }
+
+
+
+
+
+
+
 
 /**
  * Reads 'recipes' from localStorage and returns an array of
@@ -68,15 +120,67 @@ async function getRecipes() {
   // EXPOSE - START (All expose numbers start with A)
   // A1. TODO - Check local storage to see if there are any recipes.
   //            If there are recipes, return them.
+  
+  let recipes = localStorage.getItem('recipes');
+  if (recipes != null){
+    return JSON.parse(recipes);
+  } else {
+    //pass
+  }
   /**************************/
   // The rest of this method will be concerned with requesting the recipes
   // from the network
   // A2. TODO - Create an empty array to hold the recipes that you will fetch
+
+  recipes = [];
+
+
   // A3. TODO - Return a new Promise. If you are unfamiliar with promises, MDN
   //            has a great article on them. A promise takes one parameter - A
   //            function (we call these callback functions). That function will
   //            take two parameters - resolve, and reject. These are functions
   //            you can call to either resolve the Promise or Reject it.
+  
+  return new Promise(async(resolve, reject) => {
+    let i = 0;
+    let URL = null;
+
+    //A4
+    while (i < RECIPE_URLS.length) {
+    
+      URL = RECIPE_URLS[i];
+
+      //alert(URL)
+      
+      //A5
+      try {
+        //A6
+        let one_recipe = await fetch(URL);
+        //A7
+        let one_recipe_content = await one_recipe.json();
+        //A8
+        recipes.push(one_recipe_content);
+        //A9
+        i++;
+        if (i == RECIPE_URLS.length){
+          saveRecipesToStorage(recipes);
+          //alert("Resolved");
+          resolve(recipes);
+        } else {
+          //pass
+        }
+      } catch (error) {
+        //alert(error);
+        //A10
+        console.error(error);
+        //A11
+        //alert("Rejected");
+        reject(error);
+      }
+    }
+  });
+  
+  
   /**************************/
   // A4-A11 will all be *inside* the callback function we passed to the Promise
   // we're returning
@@ -127,3 +231,7 @@ function addRecipesToDocument(recipes) {
     main.append(recipeCard);
   });
 }
+
+
+
+
